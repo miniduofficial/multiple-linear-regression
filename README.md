@@ -54,7 +54,7 @@ By implementing this algorithm from scratch we obtain:
 - Intuition on how learning happens in a regression model with multiple features
 - The geometry of learning in higher–dimensional feature spaces
 - The following ideas of machine learning:
-    - The brdge between raw data and numerical representation using encoding
+    - The bridge between raw data and numerical representation using encoding
     - The role of regularization in controlling model complexity
     - Hands on experience on how to normalize data for steady and smooth convergence
     - Hands on experience on how to perform inference on testing data
