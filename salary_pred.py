@@ -1,5 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+#Comment out the stylistic tweaks if it isn't to your liking
+plt.style.use('dark_background')
+plt.rcParams.update({
+    'axes.facecolor': '#181C14',
+    'figure.facecolor': 'none',
+    'savefig.facecolor': 'none',
+    'axes.edgecolor': '#697565',
+    'axes.labelcolor': '#CFC4B3',
+    'xtick.color': '#CFC4B3',
+    'ytick.color': '#CFC4B3',
+    'text.color': '#ECDFCC',
+    'axes.titleweight': 'bold',
+    'axes.titlesize': 14,
+    'axes.labelsize': 12,
+    'font.family': 'serif'
+})
+
 import random
 from preprocessing_data import preprocess
 from utilities import *
