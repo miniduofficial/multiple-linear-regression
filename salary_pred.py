@@ -2,6 +2,7 @@ SEED = 42
 
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 random.seed(SEED)
 np.random.seed(SEED)
@@ -23,7 +24,6 @@ plt.rcParams.update({
     'font.family': 'serif'
 })
 
-import random
 from preprocessing_data import preprocess
 from utilities import *
 
