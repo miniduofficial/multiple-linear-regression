@@ -1,8 +1,8 @@
-SEED = 42
-
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+
+SEED = 42
 
 random.seed(SEED)
 np.random.seed(SEED)
@@ -81,7 +81,10 @@ rmse1 = rmse_eval(X_test_normalized, w, b, y_test)
 mae1 = mae_eval(X_test_normalized, w, b, y_test)
 r_squared1 = r_2(X_test_normalized, w, b, y_test)
 
-w_learned, b_learned, J_history = reg_grad_desc(X_train_normalized, y_train, w, b, 5e-6, 1000000, 10)
+iterations = 1000000
+_lambda = 10
+
+w_learned, b_learned, J_history = reg_grad_desc(X_train_normalized, y_train, w, b, 5e-6, iterations, _lambda)
 
 #Save weights and biases for future use
 np.savez("model_parameters.npz", weights= w_learned, bias= b_learned)
@@ -98,4 +101,7 @@ print(f"RMSE before training :\033[32m{rmse1}\033[0m, RMSE after training :\033[
 print(f"MAE before training :\033[32m{mae1}\033[0m, MAE after training :\033[32m{mae2}\033[0m")
 print(f"R**2 before training :\033[32m{r_squared1}\033[0m, R**2 after training :\033[32m{r_squared2}\033[0m")
 
-#Plot the learning curve 
+#Plotting the learning curve
+show_learning_curve = input("Show learning curve? (Y/n) :\n").strip().lower()
+if show_learning_curve in ("y", ""):
+    learning_curve(J_history, "Iterations", "Cost", "Learning Curve")

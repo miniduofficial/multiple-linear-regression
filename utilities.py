@@ -3,6 +3,7 @@ import math
 import numpy as np
 import time
 import shutil
+import matplotlib.pyplot as plt
 
 terminal_width = shutil.get_terminal_size().columns
 
@@ -209,3 +210,47 @@ def r_2 (test_features, w, b,test_targets):
     tss = np.sum((test_targets - y_mean)**2)
     r_squared = 1 - ((rss)/(tss))
     return r_squared
+
+#Defining the Learning Curve Plotting Logic
+def learning_curve(J_history, x_label, y_label, title):
+    counter = round(len(J_history)/1000)
+    J_history_truncated=[]
+
+    if len(J_history)>1000:
+        if counter > 1:
+            x_values = []
+            for i in range(len(J_history)):
+                iterator = i * counter
+                if iterator < len(J_history):
+                    J_history_truncated.append(J_history[iterator]) 
+                    x_values.append(iterator)
+                else:
+                    break
+            if x_values[-1] != len(J_history) - 1:
+                J_history_truncated.append(J_history[-1])
+                x_values.append(len(J_history)-1)
+            J_history_truncated = np.array(J_history_truncated)
+            x_values = np.array(x_values)
+            plt.plot(x_values, J_history_truncated )
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
+            plt.title(title)
+            plt.grid(True, alpha=0.2)
+            plt.tight_layout()
+            plt.show()
+        else:
+            plt.plot(range(len(J_history)), J_history )
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
+            plt.title(title)
+            plt.grid(True, alpha=0.2)
+            plt.tight_layout()
+            plt.show()
+    else:
+        plt.plot(range(len(J_history)), J_history )
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.title(title)
+        plt.grid(True, alpha=0.2)
+        plt.tight_layout()
+        plt.show()
