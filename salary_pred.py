@@ -37,7 +37,7 @@ features_shuffled, targets_shuffled = zip(*data)
 
 features_array = np.array(features_shuffled)
 targets_array = np.array(targets_shuffled)
-headers_array = np.array(headers)
+headers_array = np.array(headers, dtype=str)
 
 # Visualize each continuous feature against the target (optional)
 

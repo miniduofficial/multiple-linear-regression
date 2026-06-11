@@ -1,9 +1,9 @@
 import numpy as np 
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 from preprocessing_data import preprocess
 
-model = np.load("model_parameters.npz", allow_pickle=True)
+model = np.load("model_parameters.npz")
 
 w_learned = model["weights"]
 b_learned = model["bias"]
@@ -39,7 +39,29 @@ if X.shape[1] != len(w_learned):
 def predict(X, w, b):
     return X @ w + b
 
-prediction = predict(X, w_learned, b_learned)
-error = np.absolute(y - prediction)
+feature_idx = 1
+feature_name = headers[feature_idx]
 
-print(error)
+print(f"Observing partial effect of : {feature_name}")
+
+x_values = np.linspace(
+    X[:, feature_idx].min(),
+    X[:, feature_idx].max(),
+    200
+)
+
+x_values_normied = (x_values - mean[feature_idx])/std_deviation[feature_idx]
+
+X_partial = np.zeros((len(x_values), X.shape[1]))
+X_partial[:, feature_idx] = x_values_normied
+
+y_partial = predict(X_partial, w_learned, b_learned)
+
+plt.scatter(X[:, feature_idx], y,alpha=0.5)
+plt.plot(x_values, y_partial)
+
+plt.xlabel(feature_name)
+plt.ylabel("Salary")
+plt.title(f"Patial Effect of {feature_name} on Salary")
+
+plt.show()
