@@ -50,38 +50,4 @@ y = np.array(targets)
 if X.shape[1] != len(w_learned):
     raise ValueError(
         f"Feature count mismatch: X has {X.shape[1]} columns, "
-        f"but model has {len(w_learned)} weights."
-    )
-
-def predict(X, w, b):
-    return X @ w + b
-
-
-def plot_partial_effect(feature_idx, predict):
-    feature_name = headers[feature_idx]
-    print(f"Observing partial effect of : {feature_name}")
-
-    x_values = np.linspace(
-        X[:, feature_idx].min(),
-        X[:, feature_idx].max(),
-        200
-    )
-
-    x_values_normied = (x_values - mean[feature_idx])/std_deviation[feature_idx]
-
-    X_partial = np.zeros((len(x_values), X.shape[1]))
-    X_partial[:, feature_idx] = x_values_normied
-
-    y_partial = predict(X_partial, w_learned, b_learned)
-
-    plt.scatter(X[:, feature_idx], y,alpha=0.5, color="#81957A")
-    plt.plot(x_values, y_partial, color="#D5D0C3")
-
-    plt.xlabel(feature_name)
-    plt.ylabel("Salary")
-    plt.title(f"Partial Effect of {feature_name} on Salary")
-
-    plt.show() 
-
-for feature_idx in continuous_idx:
-    plot_partial_effect(int(feature_idx), predict)
+        f

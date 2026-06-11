@@ -307,25 +307,4 @@ else:
 # Learned weights
 # ------------------------------------------------------------
 
-st.header("Learned Weights")
-
-weights_fig = plot_weights(headers, w_learned)
-st.pyplot(weights_fig)
-
-
-# ------------------------------------------------------------
-# Raw model arrays
-# ------------------------------------------------------------
-
-with st.expander("Inspect raw model arrays"):
-    st.write("Headers")
-    st.write(headers)
-
-    st.write("Weights")
-    st.write(w_learned)
-
-    st.write("Mean")
-    st.write(mean)
-
-    st.write("Standard deviation")
-    st.write(std_deviation)
+s
