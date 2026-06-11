@@ -86,14 +86,31 @@ _lambda = 10
 
 w_learned, b_learned, J_history = reg_grad_desc(X_train_normalized, y_train, w, b, 5e-6, iterations, _lambda)
 
-#Save weights and biases for future use
-np.savez("model_parameters.npz", weights= w_learned, bias= b_learned)
-
 #Run evals post training 
 mse2 = mse_eval(X_test_normalized, w_learned, b_learned,y_test)
 rmse2 =rmse_eval(X_test_normalized, w_learned, b_learned, y_test)
 mae2 = mae_eval(X_test_normalized, w_learned, b_learned, y_test)
 r_squared2 = r_2(X_test_normalized, w_learned, b_learned, y_test)
+
+#Save weights, biases and other model specific parameters for future use and model evaluation
+np.savez(
+    "model_parameters.npz",
+    weights=w_learned,
+    bias=b_learned,
+    mean=mean,
+    standard_deviation=standard_deviation,
+    headers=headers_array,
+    continuous_idx=np.array([0, 1, 2]),
+    regularization_lambda=_lambda,
+    learning_rate=5e-6,
+    iterations=iterations,
+    seed=SEED,
+    mse=mse2,
+    rmse=rmse2,
+    mae=mae2,
+    r_squared=r_squared2,
+    J_history=J_history
+)
 
 #Compare pre vs post training evals
 print(f"MSE before training :\033[32m{mse1}\033[0m, MSE after training :\033[32m{mse2}\033[0m")
