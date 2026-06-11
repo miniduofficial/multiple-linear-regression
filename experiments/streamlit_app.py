@@ -1,5 +1,3 @@
-#Written using GPT-5.5
-
 from pathlib import Path
 import sys
 
@@ -7,25 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 
-plt.style.use('dark_background')
-plt.rcParams.update({
-    'axes.facecolor': '#181C14',
-    'figure.facecolor': 'none',
-    'savefig.facecolor': 'none',
-    'axes.edgecolor': '#697565',
-    'axes.labelcolor': '#CFC4B3',
-    'xtick.color': '#CFC4B3',
-    'ytick.color': '#CFC4B3',
-    'text.color': '#ECDFCC',
-    'axes.titleweight': 'bold',
-    'axes.titlesize': 14,
-    'axes.labelsize': 12,
-    'font.family': 'serif'
-})
-
 
 # ------------------------------------------------------------
-# Make imports work from the experiments/ directory
+# Project path setup
 # ------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -44,9 +26,167 @@ MODEL_PATH = PROJECT_ROOT / "model_parameters.npz"
 
 
 # ------------------------------------------------------------
+# Blog-inspired theme constants
+# ------------------------------------------------------------
+
+BACKGROUND = "#181C14"
+PANEL = "rgba(60, 61, 55, 0.62)"
+PANEL_DARK = "rgba(40, 46, 33, 0.86)"
+TEXT = "#ECDFCC"
+MUTED_TEXT = "#CFC4B3"
+SUBTLE_TEXT = "#A9A295"
+ACCENT = "#697565"
+SOFT_GREEN = "#81957A"
+GRID = "#3C3D37"
+
+
+# ------------------------------------------------------------
+# Streamlit page config
+# ------------------------------------------------------------
+
+st.set_page_config(
+    page_title="MLR Dashboard",
+    page_icon="📜",
+    layout="wide"
+)
+
+
+# ------------------------------------------------------------
+# Custom CSS
+# ------------------------------------------------------------
+
+st.markdown(
+    f"""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Volkhov:wght@400;700&display=swap');
+
+        .stApp {{
+            background: {BACKGROUND};
+            color: {TEXT};
+            font-family: 'Libre Baskerville', serif;
+        }}
+
+        [data-testid="stHeader"] {{
+            background: rgba(24, 28, 20, 0.85);
+        }}
+
+        section[data-testid="stSidebar"] {{
+            background: {PANEL_DARK};
+            border-right: 1px solid {ACCENT};
+        }}
+
+        section[data-testid="stSidebar"] * {{
+            color: {MUTED_TEXT};
+            font-family: 'Libre Baskerville', serif;
+        }}
+
+        h1, h2, h3 {{
+            font-family: 'Volkhov', serif;
+            color: {TEXT};
+            letter-spacing: 0.02em;
+        }}
+
+        p, li, label, div {{
+            color: {MUTED_TEXT};
+        }}
+
+        .main-title {{
+            border: 1px solid {ACCENT};
+            border-radius: 12px;
+            background: {PANEL};
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0 30px rgba(0,0,0,0.25);
+        }}
+
+        .main-title h1 {{
+            margin-bottom: 0.4rem;
+            font-size: 2.2rem;
+        }}
+
+        .main-title p {{
+            color: {MUTED_TEXT};
+            font-style: italic;
+            margin-bottom: 0;
+        }}
+
+        .metric-card {{
+            border: 1px solid rgba(105, 117, 101, 0.65);
+            border-radius: 10px;
+            background: {PANEL};
+            padding: 1rem;
+            text-align: center;
+            min-height: 105px;
+        }}
+
+        .metric-label {{
+            color: {SUBTLE_TEXT};
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+        }}
+
+        .metric-value {{
+            color: {TEXT};
+            font-family: 'Volkhov', serif;
+            font-size: 1.45rem;
+            font-weight: 700;
+        }}
+
+        .section-card {{
+            border: 1px solid rgba(105, 117, 101, 0.5);
+            border-radius: 12px;
+            background: rgba(60, 61, 55, 0.35);
+            padding: 1.2rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }}
+
+        .small-note {{
+            color: {SUBTLE_TEXT};
+            font-size: 0.95rem;
+            font-style: italic;
+        }}
+
+        div[data-testid="stCodeBlock"] {{
+            border: 1px solid rgba(105, 117, 101, 0.5);
+            border-radius: 8px;
+        }}
+
+        .stButton > button {{
+            background: rgba(60, 61, 55, 0.7);
+            color: {TEXT};
+            border: 1px solid {ACCENT};
+            border-radius: 8px;
+            font-family: 'Libre Baskerville', serif;
+        }}
+
+        .stButton > button:hover {{
+            background: {ACCENT};
+            color: {BACKGROUND};
+            border: 1px solid {ACCENT};
+        }}
+
+        a {{
+            color: {SOFT_GREEN};
+        }}
+
+        hr {{
+            border: none;
+            height: 2px;
+            background: {GRID};
+            margin: 1.5rem 0;
+        }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ------------------------------------------------------------
 # Helper functions
 # ------------------------------------------------------------
 
+@st.cache_data
 def load_model(model_path):
     model = np.load(model_path)
 
@@ -65,8 +205,28 @@ def load_model(model_path):
     }
 
 
+@st.cache_data
+def load_dataset():
+    features, targets, _ = preprocess()
+    return np.array(features), np.array(targets)
+
+
 def predict(X, w, b):
     return X @ w + b
+
+
+def style_matplotlib_axis(ax):
+    ax.set_facecolor(BACKGROUND)
+
+    ax.tick_params(colors=MUTED_TEXT)
+    ax.xaxis.label.set_color(MUTED_TEXT)
+    ax.yaxis.label.set_color(MUTED_TEXT)
+    ax.title.set_color(TEXT)
+
+    for spine in ax.spines.values():
+        spine.set_color(ACCENT)
+
+    ax.grid(True, alpha=0.18)
 
 
 def create_partial_effect_data(
@@ -97,58 +257,112 @@ def create_partial_effect_data(
 
 
 def plot_partial_effect(X, y, x_values, y_partial, feature_idx, feature_name):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8, 5))
+    fig.patch.set_facecolor(BACKGROUND)
 
-    ax.scatter(X[:, feature_idx], y, alpha=0.5, label="Actual data", color="#81957A")
-    ax.plot(x_values, y_partial, label="Partial effect line", color="#D5D0C3")
+    ax.scatter(
+        X[:, feature_idx],
+        y,
+        alpha=0.55,
+        label="Actual data",
+        color=SOFT_GREEN,
+        edgecolors="none"
+    )
+
+    ax.plot(
+        x_values,
+        y_partial,
+        label="Partial effect line",
+        color=TEXT,
+        linewidth=2.2
+    )
 
     ax.set_xlabel(feature_name)
     ax.set_ylabel("Salary")
     ax.set_title(f"Partial effect of {feature_name} on salary")
-    ax.legend()
+    ax.legend(facecolor=BACKGROUND, edgecolor=ACCENT, labelcolor=MUTED_TEXT)
+
+    style_matplotlib_axis(ax)
+    fig.tight_layout()
 
     return fig
 
 
 def plot_learning_curve(J_history):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8, 5))
+    fig.patch.set_facecolor(BACKGROUND)
 
-    ax.plot(np.arange(len(J_history)), J_history, color="#D5D0C3")
+    ax.plot(
+        np.arange(len(J_history)),
+        J_history,
+        color=SOFT_GREEN,
+        linewidth=2
+    )
 
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Cost")
     ax.set_title("Learning curve")
 
+    style_matplotlib_axis(ax)
+    fig.tight_layout()
+
     return fig
 
 
 def plot_weights(headers, weights):
-    fig, ax = plt.subplots()
+    fig_height = max(5, len(headers) * 0.35)
+
+    fig, ax = plt.subplots(figsize=(8, fig_height))
+    fig.patch.set_facecolor(BACKGROUND)
 
     y_positions = np.arange(len(headers))
 
-    ax.barh(y_positions, weights, color="#D5D0C3")
+    ax.barh(
+        y_positions,
+        weights,
+        color=SOFT_GREEN,
+        alpha=0.85
+    )
+
     ax.set_yticks(y_positions)
     ax.set_yticklabels(headers)
     ax.set_xlabel("Weight value")
     ax.set_title("Learned weights by feature")
+    ax.axvline(0, color=TEXT, linewidth=1, alpha=0.55)
+
+    style_matplotlib_axis(ax)
+    fig.tight_layout()
 
     return fig
 
 
+def metric_card(label, value):
+    st.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-label">{label}</div>
+            <div class="metric-value">{value}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 # ------------------------------------------------------------
-# Streamlit app
+# Header
 # ------------------------------------------------------------
 
-st.set_page_config(
-    page_title="MLR Training Dashboard",
-    layout="wide"
-)
-
-st.title("Multiple Linear Regression Dashboard")
-
-st.write(
-    "Experimental GUI for inspecting the saved multiple linear regression model."
+st.markdown(
+    """
+    <div class="main-title">
+        <h1>Multiple Linear Regression Dashboard</h1>
+        <p>
+            A small interpretability chamber for the salary estimation model:
+            learning curves, learned weights, and partial effects.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 
@@ -169,10 +383,7 @@ std_deviation = model["std_deviation"]
 headers = model["headers"]
 continuous_idx = model["continuous_idx"]
 
-features, targets, _ = preprocess()
-
-X = np.array(features)
-y = np.array(targets)
+X, y = load_dataset()
 
 if X.shape[1] != len(w_learned):
     st.error(
@@ -186,14 +397,20 @@ if X.shape[1] != len(w_learned):
 # Sidebar controls
 # ------------------------------------------------------------
 
-st.sidebar.header("Controls")
+st.sidebar.title("The Console")
+
+st.sidebar.markdown(
+    """
+    Select a continuous feature and inspect the model's isolated partial effect.
+    """
+)
 
 continuous_feature_names = [
-    headers[idx] for idx in continuous_idx
+    str(headers[idx]) for idx in continuous_idx
 ]
 
 selected_feature_name = st.sidebar.selectbox(
-    "Select feature for partial effect",
+    "Feature",
     continuous_feature_names
 )
 
@@ -204,11 +421,16 @@ selected_feature_idx = int(
 )
 
 number_of_points = st.sidebar.slider(
-    "Number of synthetic points",
+    "Synthetic probe points",
     min_value=50,
     max_value=500,
     value=200,
     step=50
+)
+
+show_raw_arrays = st.sidebar.checkbox(
+    "Show raw model arrays",
+    value=False
 )
 
 
@@ -221,47 +443,52 @@ st.header("Model Summary")
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    if model["rmse"] is not None:
-        st.metric("RMSE", f"{model['rmse']:.4f}")
-    else:
-        st.metric("RMSE", "Not saved")
+    metric_card(
+        "RMSE",
+        f"{model['rmse']:.4f}" if model["rmse"] is not None else "Not saved"
+    )
 
 with col2:
-    if model["mae"] is not None:
-        st.metric("MAE", f"{model['mae']:.4f}")
-    else:
-        st.metric("MAE", "Not saved")
+    metric_card(
+        "MAE",
+        f"{model['mae']:.4f}" if model["mae"] is not None else "Not saved"
+    )
 
 with col3:
-    if model["mse"] is not None:
-        st.metric("MSE", f"{model['mse']:.4f}")
-    else:
-        st.metric("MSE", "Not saved")
+    metric_card(
+        "MSE",
+        f"{model['mse']:.4f}" if model["mse"] is not None else "Not saved"
+    )
 
 with col4:
-    if model["r_squared"] is not None:
-        st.metric("R²", f"{model['r_squared']:.4f}")
-    else:
-        st.metric("R²", "Not saved")
+    metric_card(
+        "R²",
+        f"{model['r_squared']:.4f}" if model["r_squared"] is not None else "Not saved"
+    )
 
 
-st.subheader("Loaded model artifact")
+st.markdown('<div class="section-card">', unsafe_allow_html=True)
+
+st.subheader("Loaded artifact")
 
 st.code(
     f"""
 Weights shape: {w_learned.shape}
 Bias: {b_learned}
+Number of observations: {X.shape[0]}
 Number of features: {X.shape[1]}
 Continuous feature indices: {continuous_idx}
     """.strip()
 )
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ------------------------------------------------------------
 # Partial effect plot
 # ------------------------------------------------------------
 
-st.header("Partial Effect Plot")
+st.header("Partial Effect")
 
 x_values, y_partial = create_partial_effect_data(
     X=X,
@@ -284,9 +511,15 @@ partial_effect_fig = plot_partial_effect(
 
 st.pyplot(partial_effect_fig)
 
-st.write(
-    "The scatter points are real observations. "
-    "The line is generated from synthetic examples where only the selected feature changes."
+st.markdown(
+    """
+    <p class="small-note">
+        The scatter points are real observations. The line is produced from synthetic
+        probe examples where only the selected feature changes while the other features
+        are held at their baseline values.
+    </p>
+    """,
+    unsafe_allow_html=True
 )
 
 
@@ -317,15 +550,18 @@ st.pyplot(weights_fig)
 # Raw model arrays
 # ------------------------------------------------------------
 
-with st.expander("Inspect raw model arrays"):
-    st.write("Headers")
-    st.write(headers)
+if show_raw_arrays:
+    st.header("Raw Model Arrays")
 
-    st.write("Weights")
-    st.write(w_learned)
+    with st.expander("Inspect raw model arrays", expanded=True):
+        st.write("Headers")
+        st.write(headers)
 
-    st.write("Mean")
-    st.write(mean)
+        st.write("Weights")
+        st.write(w_learned)
 
-    st.write("Standard deviation")
-    st.write(std_deviation)
+        st.write("Mean")
+        st.write(mean)
+
+        st.write("Standard deviation")
+        st.write(std_deviation)
