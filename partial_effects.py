@@ -3,6 +3,23 @@ import matplotlib.pyplot as plt
 
 from preprocessing_data import preprocess
 
+#Comment out the stylistic tweaks if it isn't to your liking
+plt.style.use('dark_background')
+plt.rcParams.update({
+    'axes.facecolor': '#181C14',
+    'figure.facecolor': 'none',
+    'savefig.facecolor': 'none',
+    'axes.edgecolor': '#697565',
+    'axes.labelcolor': '#CFC4B3',
+    'xtick.color': '#CFC4B3',
+    'ytick.color': '#CFC4B3',
+    'text.color': '#ECDFCC',
+    'axes.titleweight': 'bold',
+    'axes.titlesize': 14,
+    'axes.labelsize': 12,
+    'font.family': 'serif'
+})
+
 model = np.load("model_parameters.npz")
 
 w_learned = model["weights"]
@@ -39,29 +56,32 @@ if X.shape[1] != len(w_learned):
 def predict(X, w, b):
     return X @ w + b
 
-feature_idx = 1
-feature_name = headers[feature_idx]
 
-print(f"Observing partial effect of : {feature_name}")
+def plot_partial_effect(feature_idx, predict):
+    feature_name = headers[feature_idx]
+    print(f"Observing partial effect of : {feature_name}")
 
-x_values = np.linspace(
-    X[:, feature_idx].min(),
-    X[:, feature_idx].max(),
-    200
-)
+    x_values = np.linspace(
+        X[:, feature_idx].min(),
+        X[:, feature_idx].max(),
+        200
+    )
 
-x_values_normied = (x_values - mean[feature_idx])/std_deviation[feature_idx]
+    x_values_normied = (x_values - mean[feature_idx])/std_deviation[feature_idx]
 
-X_partial = np.zeros((len(x_values), X.shape[1]))
-X_partial[:, feature_idx] = x_values_normied
+    X_partial = np.zeros((len(x_values), X.shape[1]))
+    X_partial[:, feature_idx] = x_values_normied
 
-y_partial = predict(X_partial, w_learned, b_learned)
+    y_partial = predict(X_partial, w_learned, b_learned)
 
-plt.scatter(X[:, feature_idx], y,alpha=0.5)
-plt.plot(x_values, y_partial)
+    plt.scatter(X[:, feature_idx], y,alpha=0.5, color="#81957A")
+    plt.plot(x_values, y_partial, color="#D5D0C3")
 
-plt.xlabel(feature_name)
-plt.ylabel("Salary")
-plt.title(f"Patial Effect of {feature_name} on Salary")
+    plt.xlabel(feature_name)
+    plt.ylabel("Salary")
+    plt.title(f"Partial Effect of {feature_name} on Salary")
 
-plt.show()
+    plt.show() 
+
+for feature_idx in continuous_idx:
+    plot_partial_effect(int(feature_idx), predict)
