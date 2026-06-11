@@ -121,4 +121,4 @@ print(f"R**2 before training :\033[32m{r_squared1}\033[0m, R**2 after training :
 #Plotting the learning curve
 show_learning_curve = input("Show learning curve? (Y/n) :\n").strip().lower()
 if show_learning_curve in ("y", ""):
-    learning_curve(J_history, "Iterations", "Cost", "Learn
+    learning_curve(J_history, "Iterations", "Cost", "Learning Curve")
