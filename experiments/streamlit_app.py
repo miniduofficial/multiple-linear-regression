@@ -232,6 +232,7 @@ def style_matplotlib_axis(ax):
 def create_partial_effect_data(
     X,
     feature_idx,
+    continuous_idx,
     mean,
     std_deviation,
     w,
@@ -244,14 +245,27 @@ def create_partial_effect_data(
         number_of_points
     )
 
-    x_values_normalized = (
-        x_values - mean[feature_idx]
-    ) / std_deviation[feature_idx]
+    # Convert the observed feature matrix into the representation expected by
+    # the trained model. One-hot and cyclic features are already model-ready;
+    # only the continuous columns were standardized during training.
+    X_model = np.array(X, dtype=float, copy=True)
+    for idx in continuous_idx:
+        idx = int(idx)
+        if std_deviation[idx] != 0:
+            X_model[:, idx] = (
+                X_model[:, idx] - mean[idx]
+            ) / std_deviation[idx]
 
-    X_partial = np.zeros((len(x_values), X.shape[1]))
-    X_partial[:, feature_idx] = x_values_normalized
-
-    y_partial = predict(X_partial, w, b)
+    # Partial dependence at a probe value is the average prediction obtained
+    # after replacing the selected feature for every observed employee while
+    # leaving that employee's other encoded features unchanged.
+    y_partial = np.empty(len(x_values), dtype=float)
+    for probe_idx, x_value in enumerate(x_values):
+        X_probe = X_model.copy()
+        X_probe[:, feature_idx] = (
+            x_value - mean[feature_idx]
+        ) / std_deviation[feature_idx]
+        y_partial[probe_idx] = np.mean(predict(X_probe, w, b))
 
     return x_values, y_partial
 
@@ -272,9 +286,22 @@ def plot_partial_effect(X, y, x_values, y_partial, feature_idx, feature_name):
     ax.plot(
         x_values,
         y_partial,
-        label="Partial effect line",
+        label="Average partial-effect trend",
         color=TEXT,
-        linewidth=2.2
+        linewidth=1.7,
+        alpha=0.72
+    )
+
+    ax.scatter(
+        x_values,
+        y_partial,
+        label=f"Synthetic probes (n={len(x_values)})",
+        color=TEXT,
+        edgecolors=BACKGROUND,
+        linewidths=0.7,
+        marker="D",
+        s=34,
+        zorder=3
     )
 
     ax.set_xlabel(feature_name)
@@ -401,7 +428,8 @@ st.sidebar.title("The Console")
 
 st.sidebar.markdown(
     """
-    Select a continuous feature and inspect the model's isolated partial effect.
+    Select a continuous feature and inspect how the model's average prediction
+    changes when that feature is varied across its observed range.
     """
 )
 
@@ -422,10 +450,15 @@ selected_feature_idx = int(
 
 number_of_points = st.sidebar.slider(
     "Synthetic probe points",
-    min_value=50,
-    max_value=500,
-    value=200,
-    step=50
+    min_value=5,
+    max_value=50,
+    value=15,
+    step=5,
+    help=(
+        "Controls how many diamond-shaped model probes are drawn across the "
+        "selected feature's observed range. It changes sampling density, not "
+        "the fitted linear relationship."
+    )
 )
 
 show_raw_arrays = st.sidebar.checkbox(
@@ -490,9 +523,48 @@ st.markdown("</div>", unsafe_allow_html=True)
 
 st.header("Partial Effect")
 
+st.markdown(
+    """
+    A **partial effect** asks a model-focused question: *how does the model's
+    average predicted salary change as one feature changes, after accounting for
+    the observed values of all the other features?* It describes the behaviour
+    learned by this model; it does **not** establish that changing the feature
+    causes salary to change.
+    """
+)
+
+with st.expander("How the partial effect is computed", expanded=True):
+    st.markdown(
+        """
+        1. Create evenly spaced probe values from the selected feature's minimum
+           to maximum observed value.
+        2. For each probe value, copy every observed employee profile and replace
+           only the selected feature with that value.
+        3. Standardize the replacement value with the training mean and standard
+           deviation, then predict a salary for every copied profile.
+        4. Average those predictions. The resulting average is one point on the
+           partial-effect curve.
+
+        In notation, for feature $j$ and probe value $x$:
+        """
+    )
+    st.latex(
+        r"\operatorname{PD}_j(x)=\frac{1}{n}\sum_{i=1}^{n} "
+        r"\hat f\!\left(x,\mathbf{x}_{i,-j}\right)"
+    )
+    st.markdown(
+        r"""
+        Because this is an additive linear model without interaction terms, the
+        result must be a straight line. In raw feature units its slope is
+        $w_j/\sigma_j$; adding more probes therefore makes the diamonds denser
+        without bending or otherwise changing the line.
+        """
+    )
+
 x_values, y_partial = create_partial_effect_data(
     X=X,
     feature_idx=selected_feature_idx,
+    continuous_idx=continuous_idx,
     mean=mean,
     std_deviation=std_deviation,
     w=w_learned,
@@ -511,12 +583,34 @@ partial_effect_fig = plot_partial_effect(
 
 st.pyplot(partial_effect_fig)
 
+raw_unit_effect = (
+    w_learned[selected_feature_idx]
+    / std_deviation[selected_feature_idx]
+)
+observed_range_effect = y_partial[-1] - y_partial[0]
+
+effect_col1, effect_col2, effect_col3 = st.columns(3)
+with effect_col1:
+    metric_card("Probe points shown", f"{number_of_points}")
+with effect_col2:
+    metric_card(
+        "Prediction change per +1 raw unit",
+        f"{raw_unit_effect:+,.2f}"
+    )
+with effect_col3:
+    metric_card(
+        "Change across observed range",
+        f"{observed_range_effect:+,.2f}"
+    )
+
 st.markdown(
     """
     <p class="small-note">
-        The scatter points are real observations. The line is produced from synthetic
-        probe examples where only the selected feature changes while the other features
-        are held at their baseline values.
+        The green circles are observed employees and salaries. The diamonds are
+        synthetic model probes averaged over the observed employee profiles. The
+        vertical distance through the raw scatter is also affected by profession,
+        equipment, season and the remaining continuous features, so the partial-effect
+        trend is not expected to pass through every observation.
     </p>
     """,
     unsafe_allow_html=True
